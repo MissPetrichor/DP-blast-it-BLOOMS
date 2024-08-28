@@ -73,6 +73,7 @@
             width: 100%;
             padding: 12px;
             font-size: 16px;
+            font-family: Poppins;
             border: 1px solid #333;
             border-radius: 8px;
             background-color: #333;
@@ -87,6 +88,7 @@
         .form-group button {
             padding: 12px 24px;
             font-size: 16px;
+            font-family: Poppins;
             color: #fff;
             background-color: #ff66b2;
             border: none;
@@ -99,6 +101,9 @@
         }
         .form-group button:active {
             transform: scale(0.98);
+        }
+        p {
+            font-size: 12px;
         }
         #canvas {
             background-color: #fff;
@@ -113,6 +118,7 @@
         .download-group button {
             padding: 12px 24px;
             font-size: 16px;
+            font-family: Poppins;
             color: #fff;
             background-color: #28a745;
             border: none;
@@ -181,6 +187,8 @@
             </div>
         </div>
         <div class="right-column">
+            <!-- Plain text instruction -->
+            <p>Click on the photo to adjust its size and position.</p>
             <canvas id="canvas"></canvas>
             <div class="download-group">
                 <button id="download">Download Your Design</button>
@@ -215,61 +223,62 @@
         };
 
         document.getElementById('apply-frame').addEventListener('click', () => {
-    const photoFile = document.getElementById('photo-upload').files[0];
-    const theme = document.getElementById('theme').value;
-    const role = document.getElementById('role').value;
-    const frameUrl = framePaths[theme][role];
+            const photoFile = document.getElementById('photo-upload').files[0];
+            const theme = document.getElementById('theme').value;
+            const role = document.getElementById('role').value;
+            const frameUrl = framePaths[theme][role];
 
-    if (photoFile && frameUrl) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            fabric.Image.fromURL(event.target.result, (photo) => {
-                canvas.clear();
+            if (photoFile && frameUrl) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    fabric.Image.fromURL(event.target.result, (photo) => {
+                        canvas.clear();
 
-                // Calculate scaling factors
-                const photoAspectRatio = photo.width / photo.height;
-                const canvasAspectRatio = canvas.width / canvas.height;
+                        // Calculate scaling factors
+                        const photoAspectRatio = photo.width / photo.height;
+                        const canvasAspectRatio = canvas.width / canvas.height;
 
-                let scaleX, scaleY;
-                if (photoAspectRatio > canvasAspectRatio) {
-                    // Photo is wider relative to its height compared to the canvas
-                    scaleX = canvas.width / photo.width;
-                    scaleY = scaleX; // Scale equally to maintain aspect ratio
-                } else {
-                    // Photo is taller relative to its width compared to the canvas
-                    scaleY = canvas.height / photo.height;
-                    scaleX = scaleY; // Scale equally to maintain aspect ratio
-                }
+                        let scaleX, scaleY;
+                        if (photoAspectRatio > canvasAspectRatio) {
+                            // Photo is wider relative to its height compared to the canvas
+                            scaleX = canvas.width / photo.width;
+                            scaleY = scaleX; // Scale equally to maintain aspect ratio
+                        } else {
+                            // Photo is taller relative to its width compared to the canvas
+                            scaleY = canvas.height / photo.height;
+                            scaleX = scaleY; // Scale equally to maintain aspect ratio
+                        }
 
-                // Apply scaling to fit the photo within the canvas
-                photo.set({
-                    scaleX: scaleX,
-                    scaleY: scaleY,
-                    left: (canvas.width - photo.width * scaleX) / 2,
-                    top: (canvas.height - photo.height * scaleY) / 2,
-                    selectable: true,
-                    evented: true
-                });
-                canvas.add(photo);
+                        // Apply scaling to fit the photo within the canvas
+                        photo.set({
+                            scaleX: scaleX,
+                            scaleY: scaleY,
+                            left: (canvas.width - photo.width * scaleX) / 2,
+                            top: (canvas.height - photo.height * scaleY) / 2,
+                            selectable: true,
+                            evented: true
+                        });
+                        canvas.add(photo);
 
-                fabric.Image.fromURL(frameUrl, (frame) => {
-                    frame.set({
-                        selectable: false,
-                        evented: false,
-                        scaleX: canvas.width / frame.width,
-                        scaleY: canvas.height / frame.height
+                        fabric.Image.fromURL(frameUrl, (frame) => {
+                            frame.set({
+                                selectable: false,
+                                evented: false,
+                                scaleX: canvas.width / frame.width,
+                                scaleY: canvas.height / frame.height
+                            });
+                            canvas.add(frame);
+                            frame.center();
+                            frame.sendToFront(); // Ensure frame is at the back
+                        });
                     });
-                    canvas.add(frame);
-                    frame.center();
-                    frame.sendToFront(); // Ensure frame is at the back
-                });
-            });
-        };
-        reader.readAsDataURL(photoFile);
-    } else {
-        alert('Please upload a photo and select both a theme and a role.');
-    }
-});
+                };
+                reader.readAsDataURL(photoFile);
+            } else {
+                alert('Please upload a photo and select both a theme and a role.');
+            }
+        });
+
         document.getElementById('download').addEventListener('click', () => {
             // Save the current dimensions of the canvas
             const originalWidth = canvas.getWidth();
