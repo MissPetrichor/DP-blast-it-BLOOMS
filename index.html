@@ -215,42 +215,61 @@
         };
 
         document.getElementById('apply-frame').addEventListener('click', () => {
-            const photoFile = document.getElementById('photo-upload').files[0];
-            const theme = document.getElementById('theme').value;
-            const role = document.getElementById('role').value;
-            const frameUrl = framePaths[theme][role];
+    const photoFile = document.getElementById('photo-upload').files[0];
+    const theme = document.getElementById('theme').value;
+    const role = document.getElementById('role').value;
+    const frameUrl = framePaths[theme][role];
 
-            if (photoFile && frameUrl) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    fabric.Image.fromURL(event.target.result, (photo) => {
-                        canvas.clear();
-                        photo.set({
-                            scaleX: canvas.width / photo.width,
-                            scaleY: canvas.height / photo.height,
-                            selectable: true,
-                            evented: true
-                        });
-                        canvas.add(photo);
+    if (photoFile && frameUrl) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            fabric.Image.fromURL(event.target.result, (photo) => {
+                canvas.clear();
 
-                        fabric.Image.fromURL(frameUrl, (frame) => {
-                            frame.set({
-                                selectable: false,
-                                evented: false,
-                                scaleX: canvas.width / frame.width,
-                                scaleY: canvas.height / frame.height
-                            });
-                            canvas.add(frame);
-                            frame.center();
-                            frame.sendToFront(); // Ensure frame is at the back
-                        });
+                // Calculate scaling factors
+                const photoAspectRatio = photo.width / photo.height;
+                const canvasAspectRatio = canvas.width / canvas.height;
+
+                let scaleX, scaleY;
+                if (photoAspectRatio > canvasAspectRatio) {
+                    // Photo is wider relative to its height compared to the canvas
+                    scaleX = canvas.width / photo.width;
+                    scaleY = scaleX; // Scale equally to maintain aspect ratio
+                } else {
+                    // Photo is taller relative to its width compared to the canvas
+                    scaleY = canvas.height / photo.height;
+                    scaleX = scaleY; // Scale equally to maintain aspect ratio
+                }
+
+                // Apply scaling to fit the photo within the canvas
+                photo.set({
+                    scaleX: scaleX,
+                    scaleY: scaleY,
+                    left: (canvas.width - photo.width * scaleX) / 2,
+                    top: (canvas.height - photo.height * scaleY) / 2,
+                    selectable: true,
+                    evented: true
+                });
+                canvas.add(photo);
+
+                fabric.Image.fromURL(frameUrl, (frame) => {
+                    frame.set({
+                        selectable: false,
+                        evented: false,
+                        scaleX: canvas.width / frame.width,
+                        scaleY: canvas.height / frame.height
                     });
-                };
-                reader.readAsDataURL(photoFile);
-            } else {
-                alert('Please upload a photo and select both a theme and a role.');
-            }
-        });
+                    canvas.add(frame);
+                    frame.center();
+                    frame.sendToFront(); // Ensure frame is at the back
+                });
+            });
+        };
+        reader.readAsDataURL(photoFile);
+    } else {
+        alert('Please upload a photo and select both a theme and a role.');
+    }
+});
         document.getElementById('download').addEventListener('click', () => {
             // Save the current dimensions of the canvas
             const originalWidth = canvas.getWidth();
